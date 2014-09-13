@@ -1,5 +1,8 @@
 (ns dignn.core
-  (:require [clojure.test :refer [is]]))
+  (:require [clojure.test :refer [deftest is run-tests]]
+            [its.log :as log]))
+
+(log/set-level! :off)
 
 (declare find-or-create!)
 
@@ -45,10 +48,19 @@
 (def product (partial apply *))
 
 (defn execute-perceptron [perceptron inputs]
-  (let [w 1.0
-        x (product (vals inputs))
-        b (:bias perceptron)]
-    (if (+ (* w x) b)
+  (log/debug :execute-perceptron {:perceptron perceptron :inputs inputs})
+  (let [inks (keys (:inputs perceptron))
+        weights (:inputs perceptron)
+        exvec (apply juxt inks)
+        _ (log/debug {:inks inks :weights weights ;;:w w
+                      })
+        w (exvec weights)
+        x (exvec inputs)
+        wx (map * w x)
+        b (:bias perceptron)
+        val (apply + b wx)]
+    (log/debug {:weights weights :w w :x x :b b :val val})
+    (if (<= val 0)
       0
       1)))
 
@@ -63,7 +75,8 @@
   (or (find network target)
       (execute-perceptron (perceptron-of network (second target)))))
 
-(defn calc-input! [network target inputs] (get inputs (second target)))
+(defn calc-input! [network target inputs]
+  (get inputs (second target)))
 
 (defn calc! [network target inputs]
   (let [target-type (first target)
@@ -72,7 +85,7 @@
                         :input calc-input!})]
     (f network target inputs)))
 
-(defn find-or-create! [network target inputs]
+(defn find-or-create! [network inputs target]
   "First attempts to find a cached value of the target in the network.  If the
    value is not already cached then calculates it and adds it to the cache."
   (or (find network target)
@@ -83,7 +96,8 @@
 (defn execute [network inputs]
   "Evaluate the network on the given inputs.  Operates by find-or-create!'ing
    all of the outputs and recursively fulfilling their inputs."
-  (-> network
+  (-> @network
+      :config
       :outputs
       keys
       (->> (map #(-> [:output %]))
@@ -92,14 +106,23 @@
 
 (def adder-network (make-network adder-config))
 
-(defn demo []
-  (is (= (execute adder-network {:x1 0 :x2 0})
+(deftest tests []
+  (is (= (execute-perceptron nand {:a 0 :b 0})
+         1))
+  (is (= (execute-perceptron nand {:a 1 :b 0})
+         1))
+  (is (= (execute-perceptron nand {:a 0 :b 1})
+         1))
+  (is (= (execute-perceptron nand {:a 1 :b 1})
+         0))
+  (is (= (execute (atom adder-network) {:x1 0 :x2 0})
          {:sum 0 :carry 0}))
-  (is (= (execute adder-network {:x1 1 :x2 0})
-         {:sum 1 :carry 0}))
-  (is (= (execute adder-network {:x1 0 :x2 1})
-         {:sum 1 :carry 0}))
-  (is (= (execute adder-network {:x1 1 :x2 1})
-         {:sum 0 :carry 1})))
+  ;; (is (= (execute adder-network {:x1 1 :x2 0})
+  ;;        {:sum 1 :carry 0}))
+  ;; (is (= (execute adder-network {:x1 0 :x2 1})
+  ;;        {:sum 1 :carry 0}))
+  ;; (is (= (execute adder-network {:x1 1 :x2 1})
+  ;;        {:sum 0 :carry 1}))
+  )
 
-(demo)
+(run-tests)
