@@ -46,6 +46,8 @@
 ;; a function that is attached to the perceptron, e.g. {:calc #(apply + b (map * w x))}
 ;; and then pull this calc into a default perceptron calc, and then create a new
 ;; type of perceptron with a sigmoid-calc to implement sigmoid perceptrons.
+;; quibble: a perceptron is a type of neuron and a sigmoid neuron is a type of neuron
+;; but a sigmoid neuron is not a perceptron, so do the above in light of this clarification.
 (defn execute-perceptron [perceptron inputs]
   (log/debug :execute-perceptron {:perceptron perceptron :inputs inputs})
   (let [inks (keys (:inputs perceptron))
