@@ -33,20 +33,19 @@
    :outputs {:sum {:node :node3}
              :carry {:node :node5}}})
 
-(defn make-network [config]
-  (atom {:config config}))
+(defn make-network [config]                              (atom {:config config}))
+(defn output-names [network]                             (keys (get-in @network [:config :ouputs])))
+(defn find         [network [target-type target]]        (get-in @network [:values target-type target]))
+(defn create!      [network [target-type target] value]  (swap! network assoc-in [:values target-type target] value))
 
-(defn output-names [network]
-  (keys (get-in @network [:config :ouputs])))
+(def expando (partial partial apply))
+(def sum (expando +))
+(def product (expando *))
 
-(defn find [network [target-type target]]
-  (get-in @network [:values target-type target]))
-
-(defn create! [network [target-type target] value]
-  (swap! network assoc-in [:values target-type target] value))
-
-(def product (partial apply *))
-
+;; TODO -- rewrite this such that we can pull the actual calculation out into
+;; a function that is attached to the perceptron, e.g. {:calc #(apply + b (map * w x))}
+;; and then pull this calc into a default perceptron calc, and then create a new
+;; type of perceptron with a sigmoid-calc to implement sigmoid perceptrons.
 (defn execute-perceptron [perceptron inputs]
   (log/debug :execute-perceptron {:perceptron perceptron :inputs inputs})
   (let [inks (keys (:inputs perceptron))
@@ -58,7 +57,7 @@
         x (exvec inputs)
         wx (map * w x)
         b (:bias perceptron)
-        val (apply + b wx)]
+        val (sum b wx)]
     (log/debug {:weights weights :w w :x x :b b :val val})
     (if (<= val 0)
       0
@@ -103,40 +102,3 @@
 
 (def adder-network (make-network adder-config))
 
-(deftest test-nand-perceptron []
-  (is (= (execute-perceptron nand {:a 0 :b 0})
-         1))
-  (is (= (execute-perceptron nand {:a 1 :b 0})
-         1))
-  (is (= (execute-perceptron nand {:a 0 :b 1})
-         1))
-  (is (= (execute-perceptron nand {:a 1 :b 1})
-         0)))
-
-(deftest test-find-of-missing-values [])
-  (let [network (make-network adder-config)]
-    (is (= (find network [:input :missing]) nil))
-    (is (= (find network [:node :missing]) nil))
-    (is (= (find network [:output :missing]) nil)))
-
-(deftest test-find-of-cached-values []
-  (let [network (make-network adder-config)]
-    (create! network [:input :mock-input] :mock-input-val)
-    (create! network [:node :mock-node] :mock-node-val)
-    (create! network [:output :mock-output] :mock-output-val)
-    (is (= (find network [:input :mock-input]) :mock-input-val))
-    (is (= (find network [:node :mock-node]) :mock-node-val))
-    (is (= (find network [:output :mock-output]) :mock-output-val))))
-
-
-  ;; (is (= (execute (atom adder-network) {:x1 0 :x2 0})
-  ;;        {:sum 0 :carry 0}))
-  ;; (is (= (execute adder-network {:x1 1 :x2 0})
-  ;;        {:sum 1 :carry 0}))
-  ;; (is (= (execute adder-network {:x1 0 :x2 1})
-  ;;        {:sum 1 :carry 0}))
-  ;; (is (= (execute adder-network {:x1 1 :x2 1})
-  ;;        {:sum 0 :carry 1}))
-
-
-(run-tests)
