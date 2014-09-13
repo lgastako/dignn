@@ -96,17 +96,14 @@
 (defn execute [network inputs]
   "Evaluate the network on the given inputs.  Operates by find-or-create!'ing
    all of the outputs and recursively fulfilling their inputs."
-  (-> @network
-      :config
-      :outputs
-      keys
-      (->> (map #(-> [:output %]))
-           (map #(find-or-create! network inputs %))
-           (into {}))))
+  (->> (output-names network)
+       (map #(-> [:output %]))
+       (map #(find-or-create! network inputs %))
+       (into {})))
 
 (def adder-network (make-network adder-config))
 
-(deftest tests []
+(deftest test-nand-perceptron []
   (is (= (execute-perceptron nand {:a 0 :b 0})
          1))
   (is (= (execute-perceptron nand {:a 1 :b 0})
@@ -114,15 +111,32 @@
   (is (= (execute-perceptron nand {:a 0 :b 1})
          1))
   (is (= (execute-perceptron nand {:a 1 :b 1})
-         0))
-  (is (= (execute (atom adder-network) {:x1 0 :x2 0})
-         {:sum 0 :carry 0}))
+         0)))
+
+(deftest test-find-of-missing-values [])
+  (let [network (make-network adder-config)]
+    (is (= (find network [:input :missing]) nil))
+    (is (= (find network [:node :missing]) nil))
+    (is (= (find network [:output :missing]) nil)))
+
+(deftest test-find-of-cached-values []
+  (let [network (make-network adder-config)]
+    (create! network [:input :mock-input] :mock-input-val)
+    (create! network [:node :mock-node] :mock-node-val)
+    (create! network [:output :mock-output] :mock-output-val)
+    (is (= (find network [:input :mock-input]) :mock-input-val))
+    (is (= (find network [:node :mock-node]) :mock-node-val))
+    (is (= (find network [:output :mock-output]) :mock-output-val))))
+
+
+  ;; (is (= (execute (atom adder-network) {:x1 0 :x2 0})
+  ;;        {:sum 0 :carry 0}))
   ;; (is (= (execute adder-network {:x1 1 :x2 0})
   ;;        {:sum 1 :carry 0}))
   ;; (is (= (execute adder-network {:x1 0 :x2 1})
   ;;        {:sum 1 :carry 0}))
   ;; (is (= (execute adder-network {:x1 1 :x2 1})
   ;;        {:sum 0 :carry 1}))
-  )
+
 
 (run-tests)
