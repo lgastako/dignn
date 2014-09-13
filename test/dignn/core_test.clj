@@ -50,5 +50,7 @@
   ;;        {:sum 0 :carry 1}))
 
 
-(run-tests)
+
+;;(run-tests)
+
 

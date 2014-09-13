@@ -104,3 +104,11 @@
 
 (def adder-network (make-network adder-config))
 
+(defn -main []
+  (doall (for [inputs [{:a 0 :b 0}
+                       {:a 1 :b 0}
+                       {:a 0 :b 1}
+                       {:a 1 :b 1}]]
+           (let [network (make-network adder-config)]
+             (execute network inputs)
+             (log/debug :inputs inputs :network-after @network)))))
