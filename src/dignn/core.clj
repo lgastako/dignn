@@ -6,52 +6,22 @@
 
 (declare find-or-create!)
 
-;; a perceptron
-(def nand
-  {:inputs {:a -2
-            :b -2}
-   :bias 3})
-
-;; a network configuration
-(def adder-config
-  {:inputs [:x1 :x2]
-   :nodes {:node1 {:perceptron nand
-                   :inputs {:a {:input :x1}
-                            :b {:node :node2}}}
-           :node2 {:perceptron nand
-                   :inputs {:a {:input :x1}
-                            :b {:input :x2}}}
-           :node3 {:perceptron nand
-                   :inputs {:a {:node :node1}
-                            :b {:node :node4}}}
-           :node4 {:perceptron nand
-                   :inputs {:a {:node :node2}
-                            :b {:input :x2}}}
-           :node5 {:perceptron nand
-                   :inputs {:a {:node :node2}
-                            :b {:node :node2}}}}
-   :outputs {:sum {:node :node3}
-             :carry {:node :node5}}})
-
-(defn make-network [config]                              (atom {:config config}))
-(defn output-names [network]                             (keys (get-in @network [:config :ouputs])))
-(defn find         [network [target-type target]]        (get-in @network [:values target-type target]))
-(defn create!      [network [target-type target] value]  (swap! network assoc-in [:values target-type target] value))
-
 (def expando (partial partial apply))
 (def sum (expando +))
 (def product (expando *))
 
-;; TODO -- rewrite this such that we can pull the actual calculation out into
-;; a function that is attached to the perceptron, e.g. {:calc #(apply + b (map * w x))}
-;; and then pull this calc into a default perceptron calc, and then create a new
-;; type of perceptron with a sigmoid-calc to implement sigmoid perceptrons.
-;; quibble: a perceptron is a type of neuron and a sigmoid neuron is a type of neuron
-;; but a sigmoid neuron is not a perceptron, so do the above in light of this clarification.
-(defn execute-perceptron [perceptron inputs]
-  (log/debug :execute-perceptron {:perceptron perceptron :inputs inputs})
-  (let [inks (keys (:inputs perceptron))
-        weights (:inputs perceptron)
+(defn pow [base exponent]
+  (Math/pow base exponent))
+
+(defn exp [x]
+  (Math/exp x))
+
+;; Types of neurons
+
+(defn perceptron [neuron inputs]
+  (log/debug :perceptron {:neuron neuron :inputs inputs})
+  (let [inks (keys (:inputs neuron))
+        weights (:inputs neuron)
         exvec (apply juxt inks)
         _ (log/debug {:inks inks :weights weights ;;:w w
                       })
@@ -65,6 +35,51 @@
       0
       1)))
 
+(defn sigmoid [neuron inputs]
+  (log/debug :sigmoid {:neuron neuron :inputs inputs})
+  (/ 1
+     (+ 1 (exp ))))
+
+;; Example neurons
+
+;; a perceptron
+(def nand
+  {:calc perceptron
+   :inputs {:a -2
+            :b -2}
+   :bias 3})
+
+;; a network configuration
+(def adder-config
+  {:inputs [:x1 :x2]
+   :nodes {:node1 {:neuron nand
+                   :inputs {:a {:input :x1}
+                            :b {:node :node2}}}
+           :node2 {:neuron nand
+                   :inputs {:a {:input :x1}
+                            :b {:input :x2}}}
+           :node3 {:neuron nand
+                   :inputs {:a {:node :node1}
+                            :b {:node :node4}}}
+           :node4 {:neuron nand
+                   :inputs {:a {:node :node2}
+                            :b {:input :x2}}}
+           :node5 {:neuron nand
+                   :inputs {:a {:node :node2}
+                            :b {:node :node2}}}}
+   :outputs {:sum {:node :node3}
+             :carry {:node :node5}}})
+
+(defn make-network [config]                              (atom {:config config}))
+(defn output-names [network]                             (keys (get-in @network [:config :ouputs])))
+(defn find         [network [target-type target]]        (get-in @network [:values target-type target]))
+(defn create!      [network [target-type target] value]  (swap! network assoc-in [:values target-type target] value))
+
+(defn execute-neuron [neuron inputs]
+  (log/debug :execute-neuron {:neuron neuron :inputs inputs})
+  (let [calc (:calc neuron)]
+    (calc neuron inputs)))
+
 (defn calc-output! [network target inputs]
   (let [src (get-in @network [:outputs (second target)])]
     (find-or-create! network src inputs)))
@@ -74,7 +89,7 @@
 
 (defn calc-node! [network target inputs]
   (or (find network target)
-      (execute-perceptron (perceptron-of network (second target)))))
+      (execute-neuron (perceptron-of network (second target)))))
 
 (defn calc-input! [network target inputs]
   (get inputs (second target)))
