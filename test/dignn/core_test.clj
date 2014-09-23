@@ -2,23 +2,25 @@
   (:refer-clojure :exclude [find]) ; suppress the shadowing warning
   (:require [clojure.core :as core])
   (:require [clojure.test :refer :all]
-            [dignn.core :refer :all]))
+            [dignn.core :refer :all]
+            [its.log :as log]))
 
 ;; Note: one consequence of implementing sum and product this way is that they behave like
 ;; apply in that if the last item is a list it's expanded.
 
+(deftest test-pow
+  (is (= 4.0 (pow 2 2)))
+  (is (= 8.0 (pow 2 3)))
+  (is (= 9.0 (pow 3 2)))
+  (is (= 27.0 (pow 3 3)))
+  (is (= 5993375.773053164 (pow 9.6 6.9))))
+
 (deftest test-exp
-  (is (= 5 (exp 5))))
+  (is (= 148.4131591025766 (exp 5))))
 
-(deftest test-sum
-  (is (= 1 (sum [0 1])))
-  (is (= 2 (sum [1 1])))
-  (is (= 15 (sum [0 1 2 3 4 5]))))
-
-(deftest test-product
-  (is (= 0 (product [0 1])))
-  (is (= 1 (product [1 1])))
-  (is (= 121 (product [12 13]))))
+(deftest test-perceptron-calc
+  (log/debug :begin :test-perceptron-calc)
+  (is (= 1 (perceptron nand {:a 0 :b 0}))))
 
 (deftest test-nand-perceptron []
   (is (= (execute-neuron nand {:a 0 :b 0})

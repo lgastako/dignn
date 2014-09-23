@@ -1,14 +1,11 @@
 (ns dignn.core
+  (:refer-clojure :exclude [find]) ; suppress the shadowing warning
   (:require [clojure.test :refer [deftest is run-tests]]
             [its.log :as log]))
 
 (log/set-level! :off)
 
 (declare find-or-create!)
-
-(def expando (partial partial apply))
-(def sum (expando +))
-(def product (expando *))
 
 (defn pow [base exponent]
   (Math/pow base exponent))
@@ -23,22 +20,21 @@
   (let [inks (keys (:inputs neuron))
         weights (:inputs neuron)
         exvec (apply juxt inks)
-        _ (log/debug {:inks inks :weights weights ;;:w w
-                      })
+        _ (log/debug {:inks inks :weights weights})
         w (exvec weights)
         x (exvec inputs)
         wx (map * w x)
-        b (:bias perceptron)
-        val (sum b wx)]
+        b (:bias neuron)
+        val (apply + b wx)]
     (log/debug {:weights weights :w w :x x :b b :val val})
     (if (<= val 0)
       0
       1)))
 
-(defn sigmoid [neuron inputs]
-  (log/debug :sigmoid {:neuron neuron :inputs inputs})
-  (/ 1
-     (+ 1 (exp ))))
+;; (defn sigmoid [neuron inputs]
+;;   (log/debug :sigmoid {:neuron neuron :inputs inputs})
+;;   (/ 1
+;;      (+ 1 (exp ))))
 
 ;; Example neurons
 
