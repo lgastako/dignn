@@ -15,26 +15,34 @@
 
 ;; Types of neurons
 
-(defn perceptron [neuron inputs]
+(defn gencalc [neuron inputs]
   (log/debug :perceptron {:neuron neuron :inputs inputs})
   (let [inks (keys (:inputs neuron))
         weights (:inputs neuron)
         exvec (apply juxt inks)
-        _ (log/debug {:inks inks :weights weights})
         w (exvec weights)
         x (exvec inputs)
         wx (map * w x)
-        b (:bias neuron)
+        b (:bias neuron)]
+    {:w w
+     :x x
+     :wx wx
+     :b b}))
+
+(defn perceptron [neuron inputs]
+  (log/debug :perceptron {:neuron neuron :inputs inputs})
+  (let [{wx :wx b :b} (gencalc neuron inputs)
         val (apply + b wx)]
-    (log/debug {:weights weights :w w :x x :b b :val val})
     (if (<= val 0)
       0
       1)))
 
-;; (defn sigmoid [neuron inputs]
-;;   (log/debug :sigmoid {:neuron neuron :inputs inputs})
-;;   (/ 1
-;;      (+ 1 (exp ))))
+(defn sigmoid [neuron inputs]
+  (log/debug :sigmoid {:neuron neuron :inputs inputs})
+  (let [{wx :wx b :b} (gencalc neuron inputs)
+        sumwx (apply + wx)]
+    (/ 1
+       (+ 1 (exp (* -1 (- sumwx b)))))))
 
 ;; Example neurons
 
@@ -44,6 +52,7 @@
    :inputs {:a -2
             :b -2}
    :bias 3})
+
 
 ;; a network configuration
 (def adder-config
