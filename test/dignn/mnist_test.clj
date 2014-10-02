@@ -3,7 +3,7 @@
   (:require [clojure.java.io :refer [input-stream]]
             [clojure.test :refer :all]
             [dignn.mnist :refer :all]
-            [dignn.slurpb :refer [slurpb]]
+            [dignn.xlib :refer [slurpb]]
             [its.log :as log]
             [org.clojars.smee.binary.core :refer :all]))
 
@@ -20,5 +20,6 @@
        (is (= 60000 (count (:labels results))))))))
 
 
-(run-tests)
+;;(run-tests)
+
 

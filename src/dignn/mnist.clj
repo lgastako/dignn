@@ -1,5 +1,6 @@
 (ns dignn.mnist
   (:require [clojure.java.io :refer [input-stream]]
+            [dignn.xlib :refer [ifn]]
             [org.clojars.smee.binary.core :refer [decode ordered-map repeated]]))
 
 ;; Functions for reading mnist file formats
@@ -8,13 +9,10 @@
 (def gzipped? #(-> (.endsWith (str %) ".gz")))
 
 (defn parse-src [parser src]
-  (let [parse #(decode parser %)
-        inflate (if (gzipped? src)
-                  gunzip
-                  identity)]
+  (let [parse #(decode parser %)]
     (-> src
         input-stream
-        inflate
+        (ifn gzipped? gunzip)
         parse)))
 
 ;; [offset] [type]          [value]          [description]

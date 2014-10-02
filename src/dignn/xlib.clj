@@ -1,4 +1,12 @@
-(ns dignn.slurpb)
+(ns dignn.xlib)
+
+
+(defn ifn [pred? f]
+  "Return a function that applies f to its input if f matches pred? and otherwise returns x."
+  (fn [x]
+    (if (pred? x)
+      (f x)
+      x)))
 
 ;; From user3742065 here:
 ;; http://stackoverflow.com/questions/23018870/how-to-read-a-whole-binary-file-nippy-into-byte-array-in-clojure
