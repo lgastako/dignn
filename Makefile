@@ -22,3 +22,6 @@ b: build
 r: run
 t: test
 ck: check
+
+.PHONY: test run clean check build all
+.PHONY: b r t ck

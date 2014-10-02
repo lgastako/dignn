@@ -9,10 +9,11 @@
 (def gzipped? #(-> (.endsWith (str %) ".gz")))
 
 (defn parse-src [parser src]
-  (let [parse #(decode parser %)]
+  (let [parse #(decode parser %)
+        inflate (ifn gzipped? gunzip)]
     (-> src
         input-stream
-        (ifn gzipped? gunzip)
+        inflate
         parse)))
 
 ;; [offset] [type]          [value]          [description]
