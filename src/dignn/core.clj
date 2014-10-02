@@ -124,11 +124,23 @@
 
 (def adder-network (make-network adder-config))
 
+(defn system []
+  {:inputs [{:a 0 :b 0}
+            {:a 1 :b 0}
+            {:a 0 :b 1}
+            {:a 1 :b 1}]
+   :network adder-config})
+
+(def start identity)
+(def stop (constantly nil))
+
+(defn execute [inputs network]
+  (doall (for [input inputs]
+           (let [network (make-network network)]
+             (execute network input)
+             (log/debug :input input :network-after @network)))))
+
 (defn -main []
-  (doall (for [inputs [{:a 0 :b 0}
-                       {:a 1 :b 0}
-                       {:a 0 :b 1}
-                       {:a 1 :b 1}]]
-           (let [network (make-network adder-config)]
-             (execute network inputs)
-             (log/debug :inputs inputs :network-after @network)))))
+  ;; TODO: docopt
+  (let [{inputs :inputs network :network} (system)]
+    (execute inputs network)))

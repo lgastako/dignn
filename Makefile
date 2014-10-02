@@ -6,6 +6,9 @@ all:
 build:
 	$(LEIN) compile
 
+check:
+	$(LEIN) check
+
 clean:
 	$(LEIN) clean
 
@@ -18,3 +21,4 @@ test:
 b: build
 r: run
 t: test
+ck: check
