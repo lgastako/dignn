@@ -18,18 +18,14 @@
 (deftest test-exp
   (is (= 148.4131591025766 (exp 5))))
 
-(deftest test-perceptron-calc
-  (log/debug :begin :test-perceptron-calc)
-  (is (= 1 (perceptron nand [0 0]))))
-
 (deftest test-nand-perceptron []
-  (is (= (execute-neuron nand [0 0])
+  (is (= (evaluate nand [0 0])
          1))
-  (is (= (execute-neuron nand [1 0])
+  (is (= (evaluate nand [1 0])
          1))
-  (is (= (execute-neuron nand [0 1])
+  (is (= (evaluate nand [0 1])
          1))
-  (is (= (execute-neuron nand [1 1])
+  (is (= (evaluate nand [1 1])
          0)))
 
 (deftest test-find-of-missing-values [])
@@ -47,14 +43,15 @@
     (is (= (find network [:node :mock-node]) :mock-node-val))
     (is (= (find network [:output :mock-output]) :mock-output-val))))
 
-  ;; (is (= (execute (atom adder-network) {:x1 0 :x2 0})
-  ;;        {:sum 0 :carry 0}))
-  ;; (is (= (execute adder-network {:x1 1 :x2 0})
-  ;;        {:sum 1 :carry 0}))
-  ;; (is (= (execute adder-network {:x1 0 :x2 1})
-  ;;        {:sum 1 :carry 0}))
-  ;; (is (= (execute adder-network {:x1 1 :x2 1})
-  ;;        {:sum 0 :carry 1}))
+(deftest test-something []
+  (is (= (execute (atom adder-network) [0 0])
+         {:sum 0 :carry 0}))
+  (is (= (execute adder-network [1 0])
+         {:sum 1 :carry 0}))
+  (is (= (execute adder-network [0 1])
+         {:sum 1 :carry 0}))
+  (is (= (execute adder-network [1 1])
+         {:sum 0 :carry 1})))
 
 
 (run-tests)
