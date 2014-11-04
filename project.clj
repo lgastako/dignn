@@ -9,4 +9,5 @@
                                   [org.clojure/java.classpath "0.2.0"]]}}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [its-log "0.2.2"]
-                 [org.clojars.smee/binary "0.3.0"]])
+                 [org.clojars.smee/binary "0.3.0"]
+                 [net.mikera/core.matrix "0.31.1"]])
