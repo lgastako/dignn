@@ -1,9 +1,10 @@
 (ns dignn.core
-  (:refer-clojure :exclude [find]) ; suppress the shadowing warning
-  (:require [clojure.test :refer [deftest is run-tests]]
+  (:refer-clojure :exclude [find * - + / ==]) ; suppress the shadowing warning
+  (:require [clojure.core.matrix.operators :refer :all]
+            [clojure.test :refer [deftest is run-tests]]
             [its.log :as log]))
 
-(log/set-level! :off)
+(log/set-level! :debug)
 
 (declare find-or-create!)
 
@@ -15,70 +16,69 @@
 
 ;; Types of neurons
 
-(defn gencalc [neuron inputs]
-  (log/debug :perceptron {:neuron neuron :inputs inputs})
-  (let [inks (keys (:inputs neuron))
-        weights (:inputs neuron)
-        exvec (apply juxt inks)
-        w (exvec weights)
-        x (exvec inputs)
-        wx (map * w x)
-        b (:bias neuron)]
-    {:w w
-     :x x
-     :wx wx
-     :b b}))
+(defn wx [w b]
+  (reduce + (* w b)))
 
 (defn perceptron [neuron inputs]
   (log/debug :perceptron {:neuron neuron :inputs inputs})
-  (let [{wx :wx b :b} (gencalc neuron inputs)
-        val (apply + b wx)]
+  ;; Perceptrons that have a single bias but I think the way core.matrix's
+  ;; broadcasting works that should just work anyway.
+  (let [b (:bias neuron)
+        w (:weights neuron)
+        val (wx w b)]
+    (log/debug {:w w :b b :val val})
     (if (<= val 0)
       0
       1)))
 
 (defn sigmoid [neuron inputs]
   (log/debug :sigmoid {:neuron neuron :inputs inputs})
-  (let [{wx :wx b :b} (gencalc neuron inputs)
-        sumwx (apply + wx)]
-    (/ 1
-       (+ 1 (exp (* -1 (- sumwx b)))))))
+  (let [b (:biases neuron)
+        w (:weights neuron)
+        val (wx w b)]
+    (/ 1 (+ 1 (exp (* -1 (- val b)))))))
 
 ;; Example neurons
 
 ;; a perceptron
 (def nand
   {:calc perceptron
-   :inputs {:a -2
-            :b -2}
+   :weights [-2 -2]
    :bias 3})
 
 
-;; a network configuration
+;; an (obselete) network configuration
 (def adder-config
-  {:inputs [:x1 :x2]
-   :nodes {:node1 {:neuron nand
-                   :inputs {:a {:input :x1}
-                            :b {:node :node2}}}
-           :node2 {:neuron nand
-                   :inputs {:a {:input :x1}
-                            :b {:input :x2}}}
-           :node3 {:neuron nand
-                   :inputs {:a {:node :node1}
-                            :b {:node :node4}}}
-           :node4 {:neuron nand
-                   :inputs {:a {:node :node2}
-                            :b {:input :x2}}}
-           :node5 {:neuron nand
-                   :inputs {:a {:node :node2}
-                            :b {:node :node2}}}}
-   :outputs {:sum {:node :node3}
-             :carry {:node :node5}}})
+  {:inputs 2
+   :nodes [{:neuron nand
+            :inputs [{:input 0}
+                     {:node 1}]}
+           {:neuron nand
+            :inputs [{:input 0}
+                     {:input 1}]}
+           {:neuron nand
+            :inputs [{:node 0}
+                     {:node 3}]}
+           {:neuron nand
+            :inputs [{:node 1}
+                     {:input 1}]}
+           {:neuron nand
+            :inputs [{:node 1}
+                     {:node 1}]}]
+   :outputs {:sum {:node 2}
+             :carry {:node 4}}})
 
-(defn make-network [config]                              (atom {:config config}))
-(defn output-names [network]                             (keys (get-in @network [:config :ouputs])))
-(defn find         [network [target-type target]]        (get-in @network [:values target-type target]))
-(defn create!      [network [target-type target] value]  (swap! network assoc-in [:values target-type target] value))
+(defn make-network [config]
+  (atom {:config config}))
+
+(defn output-names [network]
+  (keys (get-in @network [:config :ouputs])))
+
+(defn find [network [target-type target]]
+  (get-in @network [:values target-type target]))
+
+(defn create! [network [target-type target] value]
+  (swap! network assoc-in [:values target-type target] value))
 
 (defn execute-neuron [neuron inputs]
   (log/debug :execute-neuron {:neuron neuron :inputs inputs})
@@ -125,10 +125,10 @@
 (def adder-network (make-network adder-config))
 
 (defn system []
-  {:inputs [{:a 0 :b 0}
-            {:a 1 :b 0}
-            {:a 0 :b 1}
-            {:a 1 :b 1}]
+  {:inputs [[0 0]
+            [1 0]
+            [0 1]
+            [1 1]]
    :network adder-config})
 
 (def start identity)

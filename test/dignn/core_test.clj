@@ -20,16 +20,16 @@
 
 (deftest test-perceptron-calc
   (log/debug :begin :test-perceptron-calc)
-  (is (= 1 (perceptron nand {:a 0 :b 0}))))
+  (is (= 1 (perceptron nand [0 0]))))
 
 (deftest test-nand-perceptron []
-  (is (= (execute-neuron nand {:a 0 :b 0})
+  (is (= (execute-neuron nand [0 0])
          1))
-  (is (= (execute-neuron nand {:a 1 :b 0})
+  (is (= (execute-neuron nand [1 0])
          1))
-  (is (= (execute-neuron nand {:a 0 :b 1})
+  (is (= (execute-neuron nand [0 1])
          1))
-  (is (= (execute-neuron nand {:a 1 :b 1})
+  (is (= (execute-neuron nand [1 1])
          0)))
 
 (deftest test-find-of-missing-values [])
