@@ -14,6 +14,7 @@
 (defn exp [x]
   (Math/exp x))
 
+
 ;; Types of neurons
 
 (defn wx [w b]
@@ -42,7 +43,8 @@
     (let [val (wx w b)]
       (/ 1 (+ 1 (exp (* -1 (- val b))))))))
 
-;; ;; Example neurons
+
+;; Example neurons
 
 (def nand (->PerceptronNeuron [-2 -2] 3))
 
